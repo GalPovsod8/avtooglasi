@@ -179,7 +179,7 @@
                                             <TextBlock Text="Znamka" FontSize="18" FontWeight="Bold"/>
                                             <Separator Background="#A9A7B3" Margin="0,5,0,10"/>
                                             <StackPanel>
-                                                <ComboBox ItemsSource="{Binding ZnamkaValues}" SelectedItem="{Binding SelectedZnamka}"/>
+                                                <ComboBox ItemsSource="{Binding AvailableZnamke}" SelectedItem="{Binding SelectedZnamka}"/>
                                             </StackPanel>
                                         </StackPanel>
                                         <StackPanel Grid.Column="1" Margin="10 0 0 0">

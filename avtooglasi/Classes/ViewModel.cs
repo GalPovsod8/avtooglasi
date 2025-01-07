@@ -1,4 +1,5 @@
 ﻿using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.IO;
 using System.Windows;
@@ -14,6 +15,67 @@ namespace avtooglasi.Classes
         private ObservableCollection<Oglas> _avtoOglasi = new ObservableCollection<Oglas>();
         public event PropertyChangedEventHandler? PropertyChanged;
         private BitmapImage? bitMapImage;
+        private string _newZnamkaName;
+        public string NewZnamkaName
+        {
+            get => _newZnamkaName;
+            set
+            {
+                if (CheckForDuplicateZnamka(value))
+                {
+                    _newZnamkaName = value;
+                    OnPropertyChanged(nameof(NewZnamkaName));
+                    DodajZnamko.RaiseCanExecuteChanged();
+                }
+                else
+                {
+                    MessageBox.Show("Ta znamka že obstja. Ponovite vnos in ne duplicirajte.");
+                }
+            }
+        }
+
+        private ObservableCollection<string> _availableZnamke;
+        public ObservableCollection<string> AvailableZnamke
+        {
+            get => _availableZnamke;
+            set
+            {
+                _availableZnamke = value;
+                OnPropertyChanged(nameof(AvailableZnamke));
+            }
+        }
+
+        private string _selectedZnamkaForEdit;
+        public string SelectedZnamkaForEdit
+        {
+            get => _selectedZnamkaForEdit;
+            set
+            {
+                _selectedZnamkaForEdit = value;
+                OnPropertyChanged(nameof(SelectedZnamkaForEdit));
+                UrediZnamko.RaiseCanExecuteChanged();
+                OdstraniZnamko.RaiseCanExecuteChanged();
+            }
+        }
+
+        private string _editedZnamkaName;
+        public string EditedZnamkaName
+        {
+            get => _editedZnamkaName;
+            set
+            {
+                if (CheckForDuplicateZnamka(value))
+                {
+                    _editedZnamkaName = value;
+                    OnPropertyChanged(nameof(EditedZnamkaName));
+                    UrediZnamko.RaiseCanExecuteChanged();
+                }
+                else
+                {
+                    MessageBox.Show("Ta znamka že obstja. Ponovno uredite in ne duplicirajte.");
+                }
+            }
+        }
 
         public Command OdstraniCommand { get; }
         public Command ShraniXmlCommand { get; }
@@ -21,6 +83,9 @@ namespace avtooglasi.Classes
         public Command AddNewOglas { get; }
         public Command AddImage { get; }
         public Command UrediCommand { get; }
+        public Command DodajZnamko { get; }
+        public Command UrediZnamko { get; }
+        public Command OdstraniZnamko { get; }
 
         public ObservableCollection<Oglas> AvtoOglasi
         {
@@ -125,23 +190,131 @@ namespace avtooglasi.Classes
 
         public ViewModel()
         {
+            _availableZnamke = new ObservableCollection<string>();
+
             OdstraniCommand = new Command(obj => RemoveOglas(), obj => CanRemoveOrEditOglas());
             ShraniXmlCommand = new Command(obj => SaveXmlDocument());
             NaloziXmlCommand = new Command(obj => LoadXmlDocument());
             AddNewOglas = new Command(obj => DodajOglas());
             AddImage = new Command(obj => NaloziSliko());
-            UrediCommand = new Command(obj => UrediOglas(), obj => CanRemoveOrEditOglas());
+            DodajZnamko = new Command(obj => DodajZnamkoExecute(), obj => CanDodajZnamko());
+            UrediZnamko = new Command(obj => UrediZnamkoExecute(), obj => CanUrediZnamko());
+            OdstraniZnamko = new Command(obj => OdstraniZnamkoExecute(), obj => CanOdstraniZnamko());
 
             try
             {
-                _avtoOglasi.Add(new Oglas("RS7", "Dobro ohranjen nov avto!", 67500, "Bojan Novak", TipPonudbe.Prodaja, Starost.Novo, KaroserijskaIzvedba.Karavan, Znamka.Audi, "/Assets/Images/rs7audi.jpg"));
-                _avtoOglasi.Add(new Oglas("C3e", "Lep avto, ki dobro pelje!", 25000, "Maja Kovač", TipPonudbe.Prodaja, Starost.Novo, KaroserijskaIzvedba.Pick_up, Znamka.Citroen, "/Assets/Images/avto_c3.jpg"));
-                _avtoOglasi.Add(new Oglas("C3e", "Lep avto, ki dobro pelje!", 25000, "Maja Kovač", TipPonudbe.Prodaja, Starost.Novo, KaroserijskaIzvedba.Pick_up, Znamka.Citroen, "/Assets/Images/avto_ford_fiesta.jpg"));
-                _avtoOglasi.Add(new Oglas("Civic", "Lep avto, ki dobro pelje!", 25000, "Maja Kovač", TipPonudbe.Prodaja, Starost.Novo, KaroserijskaIzvedba.Pick_up, Znamka.Honda, "/Assets/Images/avto_honda_civic.jpg"));
+                _avtoOglasi.Add(new Oglas("RS7", "Dobro ohranjen nov avto!", 67500, "Bojan Novak", TipPonudbe.Prodaja, Starost.Novo, KaroserijskaIzvedba.Karavan, Znamka.Vse_znamke, "/Assets/Images/rs7audi.jpg"));
+                _avtoOglasi.Add(new Oglas("C3e", "Lep avto, ki dobro pelje!", 25000, "Maja Kovač", TipPonudbe.Prodaja, Starost.Novo, KaroserijskaIzvedba.Pick_up, Znamka.Vse_znamke, "/Assets/Images/avto_c3.jpg"));
+                _avtoOglasi.Add(new Oglas("C3e", "Lep avto, ki dobro pelje!", 25000, "Maja Kovač", TipPonudbe.Prodaja, Starost.Novo, KaroserijskaIzvedba.Pick_up, Znamka.Vse_znamke, "/Assets/Images/avto_ford_fiesta.jpg"));
+                _avtoOglasi.Add(new Oglas("Civic", "Lep avto, ki dobro pelje!", 25000, "Maja Kovač", TipPonudbe.Prodaja, Starost.Novo, KaroserijskaIzvedba.Pick_up, Znamka.Vse_znamke, "/Assets/Images/avto_honda_civic.jpg"));
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Prišlo je do napake: {ex.Message}");
+            }
+
+            LoadZnamkaFromSettings();
+        }
+
+        private bool CanDodajZnamko()
+        {
+            return !string.IsNullOrWhiteSpace(NewZnamkaName) &&
+                   !AvailableZnamke.Contains(NewZnamkaName);
+        }
+
+        private void DodajZnamkoExecute()
+        {
+            if (CanDodajZnamko())
+            {
+                try
+                {
+                    Properties.Settings.Default.Znamke.Add(NewZnamkaName);
+                    Properties.Settings.Default.Save();
+
+                    AvailableZnamke.Add(NewZnamkaName);
+                    NewZnamkaName = string.Empty;
+
+                    MessageBox.Show("Znamka uspešno dodana!");
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Napaka pri dodajanju znamke: {ex.Message}");
+                }
+            }
+        }
+
+        private bool CanUrediZnamko()
+        {
+            return !string.IsNullOrWhiteSpace(EditedZnamkaName) &&
+                   !string.IsNullOrWhiteSpace(SelectedZnamkaForEdit) &&
+                   !AvailableZnamke.Contains(EditedZnamkaName);
+        }
+
+        private void UrediZnamkoExecute()
+        {
+            if (CanUrediZnamko())
+            {
+                try
+                {
+                    int index = Properties.Settings.Default.Znamke.IndexOf(SelectedZnamkaForEdit);
+                    if (index != -1)
+                    {
+                        Properties.Settings.Default.Znamke[index] = EditedZnamkaName;
+                        Properties.Settings.Default.Save();
+
+                        index = AvailableZnamke.IndexOf(SelectedZnamkaForEdit);
+                        if (index != -1)
+                        {
+                            AvailableZnamke[index] = EditedZnamkaName;
+                        }
+
+                        EditedZnamkaName = string.Empty;
+                        SelectedZnamkaForEdit = null;
+
+                        MessageBox.Show("Znamka uspešno posodobljena!");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Napaka pri urejanju znamke: {ex.Message}");
+                }
+            }
+        }
+
+        private bool CanOdstraniZnamko()
+        {
+            return !string.IsNullOrWhiteSpace(SelectedZnamkaForEdit);
+        }
+
+        private void OdstraniZnamkoExecute()
+        {
+            if (CanOdstraniZnamko())
+            {
+                try
+                {
+                    if (MessageBox.Show($"Ali res želite izbrisati znamko '{SelectedZnamkaForEdit}'?",
+                        "Potrditev brisanja", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes)
+                    {
+                        Properties.Settings.Default.Znamke.Remove(SelectedZnamkaForEdit);
+                        Properties.Settings.Default.Save();
+
+                        AvailableZnamke.Remove(SelectedZnamkaForEdit);
+
+                        var oglisiToRemove = AvtoOglasi.Where(o => o.Znamka.ToString() == SelectedZnamkaForEdit).ToList();
+                        foreach (var oglas in oglisiToRemove)
+                        {
+                            AvtoOglasi.Remove(oglas);
+                        }
+
+                        SelectedZnamkaForEdit = null;
+
+                        MessageBox.Show("Znamka uspešno izbrisana!");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Napaka pri brisanju znamke: {ex.Message}");
+                }
             }
         }
 
@@ -281,6 +454,37 @@ namespace avtooglasi.Classes
                     MessageBox.Show("Napaka pri shranjevanju XML: " + ex.Message);
                 }
             }
+        }
+
+        private void LoadZnamkaFromSettings()
+        {
+            try
+            {
+                if (Properties.Settings.Default.Znamke != null)
+                {
+                    AvailableZnamke.Clear();
+                    foreach (string znamka in Properties.Settings.Default.Znamke)
+                    {
+                        AvailableZnamke.Add(znamka);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Napaka pri nalaganju znamk: {ex.Message}");
+            }
+        }
+
+        private bool CheckForDuplicateZnamka(string znamkaName)
+        {
+            foreach (var znamka in _availableZnamke)
+            {
+                if (znamkaName == znamka)
+                {
+                    return false;
+                }
+            }
+            return true;
         }
     }
 }

@@ -76,7 +76,7 @@
                         <StackPanel>
                             <TextBlock FontSize="14" FontWeight="Bold">Znamka</TextBlock>
                             <Separator Background="#A9A7B3" Margin="0,5,0,10"/>
-                            <ComboBox ItemsSource="{Binding ZnamkaValues}" SelectedItem="{Binding SelectedZnamka, Mode=TwoWay}"/>
+                            <ComboBox ItemsSource="{Binding AvailableZnamke}" SelectedItem="{Binding SelectedZnamka, Mode=TwoWay}"/>
                         </StackPanel>
                     </Border>
                 </StackPanel>

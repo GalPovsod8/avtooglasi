@@ -30,28 +30,7 @@ namespace avtooglasi.Model
 
     public enum Znamka
     {
-        Vse_znamke,
-        Audi,
-        BMW,
-        Citroen,
-        MercedesBenz,
-        Volkswagen,
-        Ford,
-        Toyota,
-        Honda,
-        Nissan,
-        Peugeot,
-        Renault,
-        Škoda,
-        Fiat,
-        Volvo,
-        Opel,
-        Hyundai,
-        Kia,
-        Mazda,
-        Mitsubishi,
-        Tesla,
-        Subaru
+        Vse_znamke
     }
     [Serializable, XmlRoot("Oglas")]
     public class Oglas : INotifyPropertyChanged

@@ -19,9 +19,13 @@
                     <StackPanel Grid.Column="0" MaxWidth="200px">
                         <StackPanel Margin="0 40 0 20">
                             <TextBlock Text="Dodaj novo znamko:" FontSize="14" FontWeight="Bold" Margin="0 0 0 5" Foreground="White"/>
-                            <TextBox Text="" Padding="5" BorderBrush="#7A67D1" BorderThickness="1" Background="#1A1A1A" Foreground="White" />
+                            <TextBox Text="{Binding NewZnamkaName, UpdateSourceTrigger=PropertyChanged}" 
+                 Padding="5" BorderBrush="#7A67D1" BorderThickness="1" 
+                 Background="#1A1A1A" Foreground="White" />
                         </StackPanel>
-                        <Button Margin="0 0" MaxHeight="50px" MaxWidth="200" MinWidth="200" Padding="5" FontWeight="Bold" Background="#7A67D1" Foreground="White">
+                        <Button Command="{Binding DodajZnamko}" 
+            Margin="0 0" MaxHeight="50px" MaxWidth="200" MinWidth="200" 
+            Padding="5" FontWeight="Bold" Background="#7A67D1" Foreground="White">
                             <Button.Resources>
                                 <Style TargetType="Border">
                                     <Setter Property="CornerRadius" Value="5"/>
@@ -33,12 +37,20 @@
                             </WrapPanel>
                         </Button>
                     </StackPanel>
+
                     <StackPanel Grid.Column="1" MaxWidth="200px">
                         <StackPanel Margin="0 40 0 20">
                             <TextBlock Text="Uredi znamko:" FontSize="14" FontWeight="Bold" Margin="0 0 0 5" Foreground="White"/>
-                            <TextBox Text="" Padding="5" BorderBrush="#7A67D1" BorderThickness="1" Background="#1A1A1A" Foreground="White" />
+                            <ComboBox ItemsSource="{Binding AvailableZnamke}" 
+                  SelectedItem="{Binding SelectedZnamkaForEdit}"
+                  Margin="0 0 0 5"/>
+                            <TextBox Text="{Binding EditedZnamkaName, UpdateSourceTrigger=PropertyChanged}" 
+                 Padding="5" BorderBrush="#7A67D1" BorderThickness="1" 
+                 Background="#1A1A1A" Foreground="White" />
                         </StackPanel>
-                        <Button Margin="0 0" MaxHeight="50px" MaxWidth="200" MinWidth="200" Padding="5" FontWeight="Bold" Background="#7A67D1" Foreground="White">
+                        <Button Command="{Binding UrediZnamko}" 
+            Margin="0 0" MaxHeight="50px" MaxWidth="200" MinWidth="200" 
+            Padding="5" FontWeight="Bold" Background="#7A67D1" Foreground="White">
                             <Button.Resources>
                                 <Style TargetType="Border">
                                     <Setter Property="CornerRadius" Value="5"/>
@@ -50,12 +62,16 @@
                             </WrapPanel>
                         </Button>
                     </StackPanel>
+
                     <StackPanel Grid.Column="2" MaxWidth="200px">
                         <StackPanel Margin="0 40 0 20">
-                            <TextBlock Text="Izbriši znamko" FontSize="14" FontWeight="Bold" Margin="0 0 0 5" Foreground="White"/>
-                            <ComboBox ItemsSource="{Binding ZnamkaValues}" SelectedItem="{Binding SelectedZnamka}"/>
+                            <TextBlock Text="Izbriši znamko:" FontSize="14" FontWeight="Bold" Margin="0 0 0 5" Foreground="White"/>
+                            <ComboBox ItemsSource="{Binding AvailableZnamke}" 
+                  SelectedItem="{Binding SelectedZnamkaForEdit}"/>
                         </StackPanel>
-                        <Button Margin="0 0" MaxHeight="50px" MaxWidth="200" MinWidth="200" Padding="5" FontWeight="Bold" Background="#7A67D1" Foreground="White">
+                        <Button Command="{Binding OdstraniZnamko}" 
+            Margin="0 0" MaxHeight="50px" MaxWidth="200" MinWidth="200" 
+            Padding="5" FontWeight="Bold" Background="#7A67D1" Foreground="White">
                             <Button.Resources>
                                 <Style TargetType="Border">
                                     <Setter Property="CornerRadius" Value="5"/>
