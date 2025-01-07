@@ -1,0 +1,76 @@
+﻿<Window x:Class="avtooglasi.View.settings"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:avtooglasi.View"
+        mc:Ignorable="d"
+        Title="Nastavitve" Height="450" Width="800" ResizeMode="NoResize"
+        BorderBrush="#7A67D1" BorderThickness="1" Background="#1A1A1A" Foreground="White">
+    <Grid>
+        <TabControl Background="#1A1A1A" Foreground="White">
+            <TabItem Header="Upravljanje znamk">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition/>
+                        <ColumnDefinition/>
+                        <ColumnDefinition/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0" MaxWidth="200px">
+                        <StackPanel Margin="0 40 0 20">
+                            <TextBlock Text="Dodaj novo znamko:" FontSize="14" FontWeight="Bold" Margin="0 0 0 5" Foreground="White"/>
+                            <TextBox Text="" Padding="5" BorderBrush="#7A67D1" BorderThickness="1" Background="#1A1A1A" Foreground="White" />
+                        </StackPanel>
+                        <Button Margin="0 0" MaxHeight="50px" MaxWidth="200" MinWidth="200" Padding="5" FontWeight="Bold" Background="#7A67D1" Foreground="White">
+                            <Button.Resources>
+                                <Style TargetType="Border">
+                                    <Setter Property="CornerRadius" Value="5"/>
+                                </Style>
+                            </Button.Resources>
+                            <WrapPanel>
+                                <TextBlock Text="Dodaj Znamko" FontSize="14" Margin="5 5"/>
+                                <Image Source="/Assets/Images/addIcon.png" Width="20"/>
+                            </WrapPanel>
+                        </Button>
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" MaxWidth="200px">
+                        <StackPanel Margin="0 40 0 20">
+                            <TextBlock Text="Uredi znamko:" FontSize="14" FontWeight="Bold" Margin="0 0 0 5" Foreground="White"/>
+                            <TextBox Text="" Padding="5" BorderBrush="#7A67D1" BorderThickness="1" Background="#1A1A1A" Foreground="White" />
+                        </StackPanel>
+                        <Button Margin="0 0" MaxHeight="50px" MaxWidth="200" MinWidth="200" Padding="5" FontWeight="Bold" Background="#7A67D1" Foreground="White">
+                            <Button.Resources>
+                                <Style TargetType="Border">
+                                    <Setter Property="CornerRadius" Value="5"/>
+                                </Style>
+                            </Button.Resources>
+                            <WrapPanel>
+                                <TextBlock Text="Uredi Znamko" FontSize="14" Margin="5 5"/>
+                                <Image Source="/Assets/Images/addIcon.png" Width="20"/>
+                            </WrapPanel>
+                        </Button>
+                    </StackPanel>
+                    <StackPanel Grid.Column="2" MaxWidth="200px">
+                        <StackPanel Margin="0 40 0 20">
+                            <TextBlock Text="Izbriši znamko" FontSize="14" FontWeight="Bold" Margin="0 0 0 5" Foreground="White"/>
+                            <ComboBox ItemsSource="{Binding ZnamkaValues}" SelectedItem="{Binding SelectedZnamka}"/>
+                        </StackPanel>
+                        <Button Margin="0 0" MaxHeight="50px" MaxWidth="200" MinWidth="200" Padding="5" FontWeight="Bold" Background="#7A67D1" Foreground="White">
+                            <Button.Resources>
+                                <Style TargetType="Border">
+                                    <Setter Property="CornerRadius" Value="5"/>
+                                </Style>
+                            </Button.Resources>
+                            <WrapPanel>
+                                <TextBlock Text="Izbriši Znamko" FontSize="14" Margin="5 5"/>
+                                <Image Source="/Assets/Images/addIcon.png" Width="20"/>
+                            </WrapPanel>
+                        </Button>
+                    </StackPanel>
+                </Grid>
+            </TabItem>
+            <TabItem Header="Avtomatsko shranjevanje">
+            </TabItem>
+        </TabControl>
+    </Grid>
+</Window>
