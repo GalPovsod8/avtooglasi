@@ -31,7 +31,7 @@
                     <MenuItem Header="_Oglasi">
                         <MenuItem Header="_Dodaj" Click="onClickOpenDodajOglasWindow" FontWeight="Normal" Background="#1A1A1A"/>
                         <MenuItem Header="_Odstrani" Command="{Binding OdstraniCommand}" FontWeight="Normal" Background="#1A1A1A"/>
-                        <MenuItem Header="_Uredi" Command="{Binding UrediCommand}" FontWeight="Normal" Background="#1A1A1A"/>
+                        <MenuItem Header="_Uredi" Command="{Binding UrediCommand}" IsEnabled="{Binding SelectedOglas}" FontWeight="Normal" Background="#1A1A1A"/>
                     </MenuItem>
                     <MenuItem Header="_Orodje">
                         <MenuItem Header="_Nastavitve" Click="onClickOpenSettings" FontWeight="Normal" Background="#1A1A1A"/>

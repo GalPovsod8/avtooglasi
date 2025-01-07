@@ -87,6 +87,13 @@ namespace avtooglasi
             dodajOglas.ShowDialog();
         }
 
+        private void onClickOpenEditOglas(object sender, RoutedEventArgs e)
+        {
+            EditOglas editOglas = new EditOglas(vm);
+            editOglas.Owner = this;
+            editOglas.ShowDialog();
+        }
+
         private void onClickOpenSettings(object sender, RoutedEventArgs e)
         {
             settings settings = new settings(vm);

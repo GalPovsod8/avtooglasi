@@ -6,7 +6,7 @@
         WindowStartupLocation="CenterScreen"
         mc:Ignorable="d"
         Title="Avto Oglasi" MinHeight="510" Height="550" Width="900" MinWidth="800"
-        BorderBrush="#7A67D1" BorderThickness="1" Background="#1A1A1A" Foreground="White">
+        BorderBrush="#7A67D1" BorderThickness="1" Background="#1A1A1A" Foreground="White" ResizeMode="NoResize">
     <Grid>
         <StackPanel Margin="20">
             <TextBlock Margin="0 0 0 10" FontSize="18" FontWeight="Bold">Dodaj oglas</TextBlock>
@@ -76,7 +76,9 @@
                         <StackPanel>
                             <TextBlock FontSize="14" FontWeight="Bold">Znamka</TextBlock>
                             <Separator Background="#A9A7B3" Margin="0,5,0,10"/>
-                            <ComboBox ItemsSource="{Binding AvailableZnamke}" SelectedItem="{Binding SelectedZnamka, Mode=TwoWay}"/>
+                            <ComboBox ItemsSource="{Binding AvailableZnamke}"
+                            SelectedItem="{Binding NewOglas.Znamka}"
+                            Margin="5"/>
                         </StackPanel>
                     </Border>
                 </StackPanel>

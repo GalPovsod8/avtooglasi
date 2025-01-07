@@ -1,12 +1,13 @@
-﻿using System.Collections.ObjectModel;
+﻿using avtooglasi.Model;
+using avtooglasi.View;
+using Microsoft.Win32;
+using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.IO;
 using System.Windows;
 using System.Windows.Media.Imaging;
 using System.Xml.Serialization;
-using avtooglasi.Model;
-using Microsoft.Win32;
 
 namespace avtooglasi.Classes
 {
@@ -16,6 +17,16 @@ namespace avtooglasi.Classes
         public event PropertyChangedEventHandler? PropertyChanged;
         private BitmapImage? bitMapImage;
         private string _newZnamkaName;
+        private Oglas? _currentOglas;
+        public Oglas? CurrentOglas
+        {
+            get => _currentOglas;
+            set
+            {
+                _currentOglas = value;
+                OnPropertyChanged(nameof(CurrentOglas));
+            }
+        }
         public string NewZnamkaName
         {
             get => _newZnamkaName;
@@ -83,9 +94,13 @@ namespace avtooglasi.Classes
         public Command AddNewOglas { get; }
         public Command AddImage { get; }
         public Command UrediCommand { get; }
+        public Command SaveEditCommand { get; }
+        public Command CancelEditCommand { get; }
         public Command DodajZnamko { get; }
         public Command UrediZnamko { get; }
         public Command OdstraniZnamko { get; }
+
+        private EditOglas? _editWindow;
 
         public ObservableCollection<Oglas> AvtoOglasi
         {
@@ -169,8 +184,8 @@ namespace avtooglasi.Classes
             }
         }
 
-        private Znamka _selectedZnamka;
-        public Znamka SelectedZnamka
+        private string _selectedZnamka;
+        public string SelectedZnamka
         {
             get { return _selectedZnamka; }
             set
@@ -186,11 +201,12 @@ namespace avtooglasi.Classes
         public IEnumerable<TipPonudbe> TipPonudbeValues => Enum.GetValues(typeof(TipPonudbe)).Cast<TipPonudbe>();
         public IEnumerable<Starost> StarostValues => Enum.GetValues(typeof(Starost)).Cast<Starost>();
         public IEnumerable<KaroserijskaIzvedba> KaroserijskaIzvedbaValues => Enum.GetValues(typeof(KaroserijskaIzvedba)).Cast<KaroserijskaIzvedba>();
-        public IEnumerable<Znamka> ZnamkaValues => Enum.GetValues(typeof(Znamka)).Cast<Znamka>();
+        public IEnumerable<string> ZnamkaValues => Enum.GetValues(typeof(string)).Cast<string>();
 
         public ViewModel()
         {
             _availableZnamke = new ObservableCollection<string>();
+            LoadZnamkaFromSettings();
 
             OdstraniCommand = new Command(obj => RemoveOglas(), obj => CanRemoveOrEditOglas());
             ShraniXmlCommand = new Command(obj => SaveXmlDocument());
@@ -200,20 +216,21 @@ namespace avtooglasi.Classes
             DodajZnamko = new Command(obj => DodajZnamkoExecute(), obj => CanDodajZnamko());
             UrediZnamko = new Command(obj => UrediZnamkoExecute(), obj => CanUrediZnamko());
             OdstraniZnamko = new Command(obj => OdstraniZnamkoExecute(), obj => CanOdstraniZnamko());
+            UrediCommand = new Command(execute: _ => OpenEditWindow(),canExecute: _ => SelectedOglas != null);
+            SaveEditCommand = new Command(execute: _ => SaveEdit(),canExecute: _ => CurrentOglas != null);
+            CancelEditCommand = new Command(execute: _ => CancelEdit(),canExecute: _ => true);
 
             try
             {
-                _avtoOglasi.Add(new Oglas("RS7", "Dobro ohranjen nov avto!", 67500, "Bojan Novak", TipPonudbe.Prodaja, Starost.Novo, KaroserijskaIzvedba.Karavan, Znamka.Vse_znamke, "/Assets/Images/rs7audi.jpg"));
-                _avtoOglasi.Add(new Oglas("C3e", "Lep avto, ki dobro pelje!", 25000, "Maja Kovač", TipPonudbe.Prodaja, Starost.Novo, KaroserijskaIzvedba.Pick_up, Znamka.Vse_znamke, "/Assets/Images/avto_c3.jpg"));
-                _avtoOglasi.Add(new Oglas("C3e", "Lep avto, ki dobro pelje!", 25000, "Maja Kovač", TipPonudbe.Prodaja, Starost.Novo, KaroserijskaIzvedba.Pick_up, Znamka.Vse_znamke, "/Assets/Images/avto_ford_fiesta.jpg"));
-                _avtoOglasi.Add(new Oglas("Civic", "Lep avto, ki dobro pelje!", 25000, "Maja Kovač", TipPonudbe.Prodaja, Starost.Novo, KaroserijskaIzvedba.Pick_up, Znamka.Vse_znamke, "/Assets/Images/avto_honda_civic.jpg"));
+                _avtoOglasi.Add(new Oglas("RS7", "Dobro ohranjen nov avto!", 67500, "Bojan Novak", TipPonudbe.Prodaja, Starost.Novo, KaroserijskaIzvedba.Karavan, "Vse_znamke", "/Assets/Images/rs7audi.jpg"));
+                _avtoOglasi.Add(new Oglas("C3e", "Lep avto, ki dobro pelje!", 25000, "Maja Kovač", TipPonudbe.Prodaja, Starost.Novo, KaroserijskaIzvedba.Pick_up, "Vse_znamke", "/Assets/Images/avto_c3.jpg"));
+                _avtoOglasi.Add(new Oglas("C3e", "Lep avto, ki dobro pelje!", 25000, "Maja Kovač", TipPonudbe.Prodaja, Starost.Novo, KaroserijskaIzvedba.Pick_up, "Vse_znamke", "/Assets/Images/avto_ford_fiesta.jpg"));
+                _avtoOglasi.Add(new Oglas("Civic", "Lep avto, ki dobro pelje!", 25000, "Maja Kovač", TipPonudbe.Prodaja, Starost.Novo, KaroserijskaIzvedba.Pick_up, "Vse_znamke", "/Assets/Images/avto_honda_civic.jpg"));
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Prišlo je do napake: {ex.Message}");
             }
-
-            LoadZnamkaFromSettings();
         }
 
         private bool CanDodajZnamko()
@@ -270,6 +287,7 @@ namespace avtooglasi.Classes
 
                         EditedZnamkaName = string.Empty;
                         SelectedZnamkaForEdit = null;
+                        OnPropertyChanged(nameof(AvtoOglasi));
 
                         MessageBox.Show("Znamka uspešno posodobljena!");
                     }
@@ -292,7 +310,7 @@ namespace avtooglasi.Classes
             {
                 try
                 {
-                    if (MessageBox.Show($"Ali res želite izbrisati znamko '{SelectedZnamkaForEdit}'?",
+                    if (MessageBox.Show($"Ali res želite izbrisati znamko '{SelectedZnamkaForEdit}' in vse povezane oglase?",
                         "Potrditev brisanja", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes)
                     {
                         Properties.Settings.Default.Znamke.Remove(SelectedZnamkaForEdit);
@@ -300,21 +318,50 @@ namespace avtooglasi.Classes
 
                         AvailableZnamke.Remove(SelectedZnamkaForEdit);
 
-                        var oglisiToRemove = AvtoOglasi.Where(o => o.Znamka.ToString() == SelectedZnamkaForEdit).ToList();
-                        foreach (var oglas in oglisiToRemove)
-                        {
-                            AvtoOglasi.Remove(oglas);
-                        }
+                        var updatedOglasi = new ObservableCollection<Oglas>(
+                            AvtoOglasi.Where(oglas => oglas.Znamka != SelectedZnamkaForEdit)
+                        );
+
+                        int removedCount = AvtoOglasi.Count - updatedOglasi.Count;
+
+                        AvtoOglasi = updatedOglasi;
 
                         SelectedZnamkaForEdit = null;
 
-                        MessageBox.Show("Znamka uspešno izbrisana!");
+                        MessageBox.Show(
+                            $"Znamka '{SelectedZnamkaForEdit}' je bila izbrisana.\n" +
+                            $"Število izbrisanih oglasov: {removedCount}",
+                            "Uspeh",
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Information);
                     }
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show($"Napaka pri brisanju znamke: {ex.Message}");
+                    MessageBox.Show($"Napaka pri brisanju znamke: {ex.Message}",
+                        "Napaka",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Error);
                 }
+            }
+        }
+
+        public void DeleteAllOglasiForZnamka(string znamka)
+        {
+            try
+            {
+                var updatedOglasi = new ObservableCollection<Oglas>(
+                    AvtoOglasi.Where(oglas => oglas.Znamka != znamka)
+                );
+
+                AvtoOglasi = updatedOglasi;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Napaka pri brisanju oglasov za znamko {znamka}: {ex.Message}",
+                    "Napaka",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
             }
         }
 
@@ -345,10 +392,7 @@ namespace avtooglasi.Classes
                     string.IsNullOrWhiteSpace(NewOglas.Opis) ||
                     NewOglas.Cena <= 0 ||
                     string.IsNullOrWhiteSpace(NewOglas.Prodajalec) ||
-                    NewOglas?.Ponudba == null ||
-                    NewOglas?.AvtoStarost == null ||
-                    NewOglas?.KaroserijskaIzvedba == null ||
-                    NewOglas?.Znamka == null)
+                    string.IsNullOrWhiteSpace(NewOglas.Znamka))
                 {
                     MessageBox.Show("Prosimo, izpolnite vsa polja pravilno!");
                     return;
@@ -364,7 +408,6 @@ namespace avtooglasi.Classes
                 MessageBox.Show($"Napaka: {ex.Message}");
             }
         }
-
 
         public void NaloziSliko()
         {
@@ -467,6 +510,18 @@ namespace avtooglasi.Classes
                     {
                         AvailableZnamke.Add(znamka);
                     }
+
+                    if (!AvailableZnamke.Contains("Vse znamke"))
+                    {
+                        AvailableZnamke.Insert(0, "Vse znamke");
+                    }
+                }
+                else
+                {
+                    Properties.Settings.Default.Znamke = new StringCollection();
+                    Properties.Settings.Default.Znamke.Add("Vse znamke");
+                    Properties.Settings.Default.Save();
+                    AvailableZnamke.Add("Vse znamke");
                 }
             }
             catch (Exception ex)
@@ -485,6 +540,70 @@ namespace avtooglasi.Classes
                 }
             }
             return true;
+        }
+
+        private void OpenEditWindow()
+        {
+            if (_editWindow == null || !_editWindow.IsLoaded)
+            {
+                _editWindow = EditOglas.GetInstance(this);
+                UpdateCurrentOglas();
+                _editWindow.Show();
+            }
+            else
+            {
+                _editWindow.Activate();
+            }
+        }
+
+        public void UpdateCurrentOglas()
+        {
+            if (SelectedOglas != null)
+            {
+                CurrentOglas = new Oglas
+                {
+                    Naziv = SelectedOglas.Naziv,
+                    Opis = SelectedOglas.Opis,
+                    Cena = SelectedOglas.Cena,
+                    Prodajalec = SelectedOglas.Prodajalec,
+                    ThumbnailLink = SelectedOglas.ThumbnailLink,
+                    Ponudba = SelectedOglas.Ponudba,
+                    AvtoStarost = SelectedOglas.AvtoStarost,
+                    KaroserijskaIzvedba = SelectedOglas.KaroserijskaIzvedba,
+                    Znamka = SelectedOglas.Znamka
+                };
+            }
+        }
+
+        private void SaveEdit()
+        {
+            try
+            {
+                if (CurrentOglas != null && SelectedOglas != null)
+                {
+                    SelectedOglas.Naziv = CurrentOglas.Naziv;
+                    SelectedOglas.Opis = CurrentOglas.Opis;
+                    SelectedOglas.Cena = CurrentOglas.Cena;
+                    SelectedOglas.Prodajalec = CurrentOglas.Prodajalec;
+                    SelectedOglas.ThumbnailLink = CurrentOglas.ThumbnailLink;
+                    SelectedOglas.Ponudba = CurrentOglas.Ponudba;
+                    SelectedOglas.AvtoStarost = CurrentOglas.AvtoStarost;
+                    SelectedOglas.KaroserijskaIzvedba = CurrentOglas.KaroserijskaIzvedba;
+                    SelectedOglas.Znamka = CurrentOglas.Znamka;
+
+                    MessageBox.Show("Oglas uspešno posodobljen!", "Uspeh", MessageBoxButton.OK, MessageBoxImage.Information);
+                    _editWindow?.Close();
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Napaka pri shranjevanju oglasa: {ex.Message}", "Napaka", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void CancelEdit()
+        {
+            _editWindow?.Close();
         }
     }
 }

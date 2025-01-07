@@ -28,10 +28,6 @@ namespace avtooglasi.Model
         Pick_up
     }
 
-    public enum Znamka
-    {
-        Vse_znamke
-    }
     [Serializable, XmlRoot("Oglas")]
     public class Oglas : INotifyPropertyChanged
     {
@@ -43,7 +39,21 @@ namespace avtooglasi.Model
         private TipPonudbe _ponudba;
         private Starost _avtoStarost;
         private KaroserijskaIzvedba _karoserijskaIzvedba;
-        private Znamka _znamka;
+        private string _znamka;
+
+        [XmlElement("Znamka")]
+        public string Znamka
+        {
+            get => _znamka;
+            set
+            {
+                if (_znamka != value)
+                {
+                    _znamka = value;
+                    OnPropertyChanged(nameof(Znamka));
+                }
+            }
+        }
 
         public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -158,22 +168,9 @@ namespace avtooglasi.Model
             }
         }
 
-        public Znamka Znamka
-        {
-            get => _znamka;
-            set
-            {
-                if (_znamka != value)
-                {
-                    _znamka = value;
-                    OnPropertyChanged(nameof(Znamka));
-                }
-            }
-        }
-
         public Oglas() { }
 
-        public Oglas(string naziv, string opis, double cena, string prodajalec, TipPonudbe ponudba, Starost starost, KaroserijskaIzvedba karoserijskaIzvedba, Znamka znamka, string thumbnailLink = "")
+        public Oglas(string naziv, string opis, double cena, string prodajalec, TipPonudbe ponudba, Starost starost, KaroserijskaIzvedba karoserijskaIzvedba, string znamka, string thumbnailLink = "")
         {
             _naziv = naziv;
             _opis = opis;
