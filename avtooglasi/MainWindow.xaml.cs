@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Input;
 using avtooglasi.Classes;
 using avtooglasi.View;
+using avtooglasi.View.UserControls;
 
 namespace avtooglasi
 {
@@ -17,6 +18,39 @@ namespace avtooglasi
             InitializeComponent();
             InitializeSettings();
             DataContext = vm;
+            searchFilterControl.SearchRequested += SearchFilterControl_SearchRequested;
+            searchFilterControl.FiltersChanged += SearchFilterControl_FiltersChanged;
+        }
+
+        private void SearchFilterControl_SearchRequested(object sender, string searchQuery)
+        {
+            searchQuery = searchQuery.ToLower();
+
+            var filteredResults = vm.AvtoOglasi.Where(oglas =>
+                oglas.Naziv.ToLower().Contains(searchQuery) ||
+                oglas.Znamka.ToLower().Contains(searchQuery)
+            ).ToList();
+
+            if (filteredResults.Count == 0)
+            {
+                MessageBox.Show("Ni oglasov za iskani niz.", "Rezultat iskanja", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            else
+            {
+                lvAvtoOglasiBigDisplay.ItemsSource = filteredResults;
+            }
+        }
+
+        private void SearchFilterControl_FiltersChanged(object sender, SearchFilterControl.FilterEventArgs e)
+        {
+            var filteredResults = vm.AvtoOglasi.Where(oglas =>
+                (e.TipPonudbe == "Vse" || Convert.ToString(oglas.Ponudba) == e.TipPonudbe) &&
+                (e.Starost == "Vse" || Convert.ToString(oglas.AvtoStarost) == e.Starost) &&
+                (e.Znamka == "Vse" || oglas.Znamka == e.Znamka) &&
+                (e.KaroserijskaIzvedba == "Vse" || Convert.ToString(oglas.KaroserijskaIzvedba) == e.KaroserijskaIzvedba)
+            ).ToList();
+
+            lvAvtoOglasiBigDisplay.ItemsSource = filteredResults;
         }
 
         private void InitializeSettings()
@@ -38,8 +72,10 @@ namespace avtooglasi
                 SidebarColumnWidth.MinWidth = 0;
                 SidebarColumn2Width.MinWidth = 0;
                 BtnToggleSidebar.Content = ">";
-            } else {
-                Sidebar.Visibility =Visibility.Visible;
+            }
+            else
+            {
+                Sidebar.Visibility = Visibility.Visible;
                 SidebarColumnWidth.Width = new GridLength(2, GridUnitType.Star);
                 SidebarColumn2Width.Width = new GridLength(2, GridUnitType.Star);
                 SidebarColumnWidth.MinWidth = 280;

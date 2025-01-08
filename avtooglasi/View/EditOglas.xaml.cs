@@ -15,9 +15,6 @@ using System.Windows.Shapes;
 
 namespace avtooglasi.View
 {
-    /// <summary>
-    /// Interaction logic for EditOglas.xaml
-    /// </summary>
     public partial class EditOglas : Window
     {
 
